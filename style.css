@@ -123,4 +123,32 @@ html, body {
 /* Optional: ensure it's above the GeoJSON layers if there's any z-index conflict */
 .leaflet-marker-pane .bilthoven-uvi-label {
     z-index: 650; /* Leaflet default for markers is 600, GeoJSON might be 400 */
-} 
+}
+
+.panel-toggle-button {
+    padding: 8px 12px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    display: block; /* Or inline-block if preferred next to something */
+    width: 100%; /* Make it full width of the panel */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.panel-toggle-button:hover {
+    background-color: #e0e0e0;
+}
+
+.collapsible-panel {
+    /* overflow: hidden; */ /* Add this if using max-height for transition */
+    /* transition: max-height 0.3s ease-out; */ /* Example transition */
+}
+
+.collapsible-panel.collapsed > *:not(.panel-toggle-button) {
+    display: none;
+}
+
+/* If you want the panel to be collapsed by default, you'd have the .collapsed class on the div in HTML initially
+   and then app.js would toggle it to show. For now, it will be visible by default and JS will add .collapsed */ 

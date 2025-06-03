@@ -962,4 +962,36 @@ function getUviForHour(localHour) {
 }
 
 // Initialize the application once the entire page is fully loaded (including scripts)
-window.addEventListener('load', initializeApp); 
+window.addEventListener('load', initializeApp);
+
+// Wait for the DOM to be fully loaded before attaching event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleButton = document.getElementById('togglePanelBtn');
+    // The panel now has 'collapsible-panel' class added directly in HTML
+    const panel = document.querySelector('.ui-overlay-panel.collapsible-panel');
+
+    if (toggleButton && panel) {
+        toggleButton.addEventListener('click', () => {
+            panel.classList.toggle('collapsed');
+            // Optional: Change button text based on state
+            if (panel.classList.contains('collapsed')) {
+                toggleButton.textContent = 'Show Controls';
+            } else {
+                toggleButton.textContent = 'Hide Controls';
+            }
+        });
+
+        // Optional: Set initial button text if you want it to start collapsed by default via HTML class
+        // if (panel.classList.contains('collapsed')) {
+        //     toggleButton.textContent = 'Show Controls';
+        // } else {
+        //     toggleButton.textContent = 'Hide Controls'; // Default if not starting collapsed
+        // }
+        // Set initial text to 'Hide Controls' as it's visible by default
+        toggleButton.textContent = 'Hide Controls';
+
+    } else {
+        if (!toggleButton) console.error('Toggle button #togglePanelBtn not found.');
+        if (!panel) console.error('Collapsible panel .ui-overlay-panel.collapsible-panel not found.');
+    }
+}); 
