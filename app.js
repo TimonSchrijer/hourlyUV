@@ -628,6 +628,17 @@ function addManualLineDragListeners(canvas, chartInstance) {
                 setOverlayColorImmediately(finalHour);
                 const uviForHour = getUviForHour(finalHour);
                 updateSliderUviDisplay(uviForHour);
+                
+                // Auto-collapse controls on mobile after time selection
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    const panel = document.querySelector('.ui-overlay-panel.collapsible-panel');
+                    const toggleButton = document.getElementById('togglePanelBtn');
+                    if (panel && toggleButton && !panel.classList.contains('collapsed')) {
+                        panel.classList.add('collapsed');
+                        toggleButton.textContent = 'Show Controls';
+                    }
+                }
             }
         }
     };
@@ -971,6 +982,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const panel = document.querySelector('.ui-overlay-panel.collapsible-panel');
 
     if (toggleButton && panel) {
+        // Check if we're on a mobile device
+        const isMobile = window.innerWidth <= 768;
+        
+        // If mobile, collapse the panel by default
+        if (isMobile) {
+            panel.classList.add('collapsed');
+        }
+        
         toggleButton.addEventListener('click', () => {
             panel.classList.toggle('collapsed');
             // Optional: Change button text based on state
@@ -981,14 +1000,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Optional: Set initial button text if you want it to start collapsed by default via HTML class
-        // if (panel.classList.contains('collapsed')) {
-        //     toggleButton.textContent = 'Show Controls';
-        // } else {
-        //     toggleButton.textContent = 'Hide Controls'; // Default if not starting collapsed
-        // }
-        // Set initial text to 'Hide Controls' as it's visible by default
-        toggleButton.textContent = 'Hide Controls';
+        // Set initial button text based on current state
+        if (panel.classList.contains('collapsed')) {
+            toggleButton.textContent = 'Show Controls';
+        } else {
+            toggleButton.textContent = 'Hide Controls';
+        }
+
+        // Handle window resize (device rotation, browser resize)
+        window.addEventListener('resize', () => {
+            const isNowMobile = window.innerWidth <= 768;
+            
+            // If switching to mobile and panel is not collapsed, collapse it
+            if (isNowMobile && !panel.classList.contains('collapsed')) {
+                panel.classList.add('collapsed');
+                toggleButton.textContent = 'Show Controls';
+            }
+            // Note: We don't automatically expand on desktop to preserve user's choice
+        });
 
     } else {
         if (!toggleButton) console.error('Toggle button #togglePanelBtn not found.');

@@ -151,4 +151,25 @@ html, body {
 }
 
 /* If you want the panel to be collapsed by default, you'd have the .collapsed class on the div in HTML initially
-   and then app.js would toggle it to show. For now, it will be visible by default and JS will add .collapsed */ 
+   and then app.js would toggle it to show. For now, it will be visible by default and JS will add .collapsed */
+
+/* Mobile responsiveness - collapse panel by default on mobile */
+@media (max-width: 768px) {
+    .ui-overlay-panel {
+        width: 300px; /* Slightly smaller width on mobile */
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        width: calc(100vw - 10px); /* Full width minus margins */
+        max-width: 350px; /* Don't exceed original max width */
+    }
+    
+    /* On mobile, we'll use JavaScript to add .collapsed class by default */
+    .collapsible-panel.mobile-collapsed > *:not(.panel-toggle-button) {
+        display: none;
+    }
+    
+    .panel-toggle-button {
+        font-size: 14px; /* Slightly smaller button text on mobile */
+    }
+} 
