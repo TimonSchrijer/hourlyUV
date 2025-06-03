@@ -146,7 +146,7 @@ html, body {
     /* transition: max-height 0.3s ease-out; */ /* Example transition */
 }
 
-.collapsible-panel.collapsed > *:not(.panel-toggle-button) {
+.collapsible-panel.collapsed > *:not(.panel-toggle-button):not(.status-container) {
     display: none;
 }
 

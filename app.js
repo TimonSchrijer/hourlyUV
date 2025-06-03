@@ -293,6 +293,24 @@ async function initializeMap() {
         })
     }).addTo(uvMap);
 
+    // Add click event to UVI marker to toggle controls on mobile
+    bilthovenUviMarker.on('click', () => {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            const panel = document.querySelector('.ui-overlay-panel.collapsible-panel');
+            const toggleButton = document.getElementById('togglePanelBtn');
+            
+            if (panel && toggleButton) {
+                panel.classList.toggle('collapsed');
+                if (panel.classList.contains('collapsed')) {
+                    toggleButton.textContent = 'Show Controls';
+                } else {
+                    toggleButton.textContent = 'Hide Controls';
+                }
+            }
+        }
+    });
+
     const baseStyle = {
         color: "#333", // Border color for both layers
         weight: 1,
@@ -555,43 +573,84 @@ function addManualLineDragListeners(canvas, chartInstance) {
         isDragUpdateScheduled = false;
     }
 
-    canvas.onmousedown = (event) => {
+    // Helper function to get coordinates from mouse or touch event
+    function getEventCoordinates(event) {
+        if (event.touches && event.touches.length > 0) {
+            // Touch event
+            return {
+                clientX: event.touches[0].clientX,
+                clientY: event.touches[0].clientY
+            };
+        } else if (event.changedTouches && event.changedTouches.length > 0) {
+            // Touch end event
+            return {
+                clientX: event.changedTouches[0].clientX,
+                clientY: event.changedTouches[0].clientY
+            };
+        } else {
+            // Mouse event
+            return {
+                clientX: event.clientX,
+                clientY: event.clientY
+            };
+        }
+    }
+
+    // Helper function to handle start of dragging (mouse or touch)
+    function handleDragStart(event) {
         if (!chartInstance || !manualTimeIndicatorValue) return;
+        
+        const coords = getEventCoordinates(event);
         const rect = canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
+        const inputX = coords.clientX - rect.left;
         const lineXPos = chartInstance.scales.x.getPixelForValue(manualTimeIndicatorValue);
 
-        if (Math.abs(mouseX - lineXPos) <= timeIndicatorHitboxWidth) {
+        if (Math.abs(inputX - lineXPos) <= timeIndicatorHitboxWidth) {
             isDraggingLine = true;
-            latestMouseEvent = event; 
+            latestMouseEvent = { clientX: coords.clientX, clientY: coords.clientY }; 
             canvas.style.cursor = 'grabbing';
             stopAutoTimeSliderAnimation();
+            
+            // Prevent default touch behavior (scrolling, etc.)
+            if (event.touches) {
+                event.preventDefault();
+            }
             // console.log('Manual line drag started'); // Commented out
         }
-    };
+    }
 
-    canvas.onmousemove = (event) => {
+    // Helper function to handle drag movement (mouse or touch)
+    function handleDragMove(event) {
         if (!chartInstance || !manualTimeIndicatorValue) return; // Ensure chart and value exist
 
+        const coords = getEventCoordinates(event);
+
         if (isDraggingLine) {
-            latestMouseEvent = event;
+            latestMouseEvent = { clientX: coords.clientX, clientY: coords.clientY };
             if (!isDragUpdateScheduled) {
                 isDragUpdateScheduled = true;
                 requestAnimationFrame(performDragUpdate);
             }
+            
+            // Prevent default touch behavior during drag
+            if (event.touches) {
+                event.preventDefault();
+            }
         } else {
-            // Not dragging, so check for hover to change cursor
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const lineXPos = chartInstance.scales.x.getPixelForValue(manualTimeIndicatorValue);
+            // Not dragging, so check for hover to change cursor (mouse only)
+            if (!event.touches) {
+                const rect = canvas.getBoundingClientRect();
+                const inputX = coords.clientX - rect.left;
+                const lineXPos = chartInstance.scales.x.getPixelForValue(manualTimeIndicatorValue);
 
-            if (Math.abs(mouseX - lineXPos) <= timeIndicatorHitboxWidth) {
-                canvas.style.cursor = 'pointer';
-            } else {
-                canvas.style.cursor = 'default';
+                if (Math.abs(inputX - lineXPos) <= timeIndicatorHitboxWidth) {
+                    canvas.style.cursor = 'pointer';
+                } else {
+                    canvas.style.cursor = 'default';
+                }
             }
         }
-    };
+    }
 
     const stopDragging = () => {
         if (isDraggingLine) {
@@ -610,7 +669,7 @@ function addManualLineDragListeners(canvas, chartInstance) {
                 canvas.style.cursor = 'default';
             }
             latestMouseEvent = null;
-            isDragUpdateScheduled = false; 
+            isDragUpdateScheduled = false;
             // console.log('Manual line drag ended. Final Time:', manualTimeIndicatorValue ? manualTimeIndicatorValue.toISOString() : 'N/A'); // Commented out
 
             // ON DRAG END: UPDATE ALL OTHER UI ELEMENTS
@@ -629,6 +688,9 @@ function addManualLineDragListeners(canvas, chartInstance) {
                 const uviForHour = getUviForHour(finalHour);
                 updateSliderUviDisplay(uviForHour);
                 
+                // Update current status to reflect the selected time
+                updateCurrentStatusForTime(finalHour);
+                
                 // Auto-collapse controls on mobile after time selection
                 const isMobile = window.innerWidth <= 768;
                 if (isMobile) {
@@ -643,6 +705,9 @@ function addManualLineDragListeners(canvas, chartInstance) {
         }
     };
 
+    // Mouse event listeners
+    canvas.onmousedown = handleDragStart;
+    canvas.onmousemove = handleDragMove;
     canvas.onmouseup = stopDragging;
     canvas.onmouseout = (event) => { // Stop dragging if mouse leaves canvas
         const rect = canvas.getBoundingClientRect();
@@ -650,6 +715,12 @@ function addManualLineDragListeners(canvas, chartInstance) {
             stopDragging();
         }
     };
+
+    // Touch event listeners
+    canvas.addEventListener('touchstart', handleDragStart, { passive: false });
+    canvas.addEventListener('touchmove', handleDragMove, { passive: false });
+    canvas.addEventListener('touchend', stopDragging, { passive: false });
+    canvas.addEventListener('touchcancel', stopDragging, { passive: false });
 }
 
 function updateDailyPeak(dataForDay) {
@@ -687,10 +758,15 @@ function getRecommendation(uvi) {
 function updateCurrentStatus(allDailyPeakData, selectedDate) {
     const currentUVIElement = document.getElementById('currentUVI');
     const currentRecommendationElement = document.getElementById('currentRecommendation');
+    const statusContainer = document.querySelector('.status-container');
 
     if (!selectedDate || !currentHourlyDataForDay || currentHourlyDataForDay.length === 0) {
         currentUVIElement.textContent = "Latest UVI: N/A";
         currentRecommendationElement.textContent = "No data available for the selected date.";
+        if (statusContainer) {
+            statusContainer.style.backgroundColor = '#f9f9f9';
+            statusContainer.style.borderColor = '#eee';
+        }
         if (bilthovenUviMarker) bilthovenUviMarker.setIcon(L.divIcon({ className: 'bilthoven-uvi-label', html: 'UVI: N/A', iconSize: [80, 25] }));
         return;
     }
@@ -747,6 +823,45 @@ function updateCurrentStatus(allDailyPeakData, selectedDate) {
     if (uviForCurrentHour !== null && uviForCurrentHour !== undefined) {
         currentUVIElement.textContent = `UVI at ${String(relevantHourForUvi).padStart(2, '0')}:00 (Local): ${uviForCurrentHour.toFixed(1)}`;
         currentRecommendationElement.textContent = getRecommendation(uviForCurrentHour);
+        
+        // Update status container colors based on UVI level
+        if (statusContainer) {
+            const uviColor = getUviColor(uviForCurrentHour);
+            let backgroundColor, borderColor, textColor;
+            
+            switch(uviColor) {
+                case 'red':
+                    backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                    borderColor = 'rgba(255, 0, 0, 0.3)';
+                    textColor = '#8B0000';
+                    break;
+                case 'orange':
+                    backgroundColor = 'rgba(255, 165, 0, 0.1)';
+                    borderColor = 'rgba(255, 165, 0, 0.3)';
+                    textColor = '#CC6600';
+                    break;
+                case 'yellow':
+                    backgroundColor = 'rgba(255, 255, 0, 0.1)';
+                    borderColor = 'rgba(255, 255, 0, 0.4)';
+                    textColor = '#B8860B';
+                    break;
+                case 'green':
+                    backgroundColor = 'rgba(0, 128, 0, 0.1)';
+                    borderColor = 'rgba(0, 128, 0, 0.3)';
+                    textColor = '#006400';
+                    break;
+                default: // Light blue for UVI 0 or no data
+                    backgroundColor = 'rgba(173, 216, 230, 0.1)';
+                    borderColor = 'rgba(173, 216, 230, 0.3)';
+                    textColor = '#4682B4';
+                    break;
+            }
+            
+            statusContainer.style.backgroundColor = backgroundColor;
+            statusContainer.style.borderColor = borderColor;
+            statusContainer.style.color = textColor;
+        }
+        
         if (bilthovenUviMarker) {
              bilthovenUviMarker.setIcon(L.divIcon({
                 className: 'bilthoven-uvi-label',
@@ -970,6 +1085,87 @@ function getUviForHour(localHour) {
     }
     // console.warn(`getUviForHour: No UVI found for local hour ${localHour}. Defaulting to 0.`);
     return 0; // Default if no specific data point found for that hour
+}
+
+function updateCurrentStatusForTime(localHour) {
+    const currentUVIElement = document.getElementById('currentUVI');
+    const currentRecommendationElement = document.getElementById('currentRecommendation');
+    const statusContainer = document.querySelector('.status-container');
+
+    if (!currentHourlyDataForDay || currentHourlyDataForDay.length === 0) {
+        currentUVIElement.textContent = "Latest UVI: N/A";
+        currentRecommendationElement.textContent = "No data available for the selected date.";
+        if (statusContainer) {
+            statusContainer.style.backgroundColor = '#f9f9f9';
+            statusContainer.style.borderColor = '#eee';
+        }
+        if (bilthovenUviMarker) bilthovenUviMarker.setIcon(L.divIcon({ className: 'bilthoven-uvi-label', html: 'UVI: N/A', iconSize: [80, 25] }));
+        return;
+    }
+
+    const uviForHour = getUviForHour(localHour);
+    
+    if (uviForHour !== null && uviForHour !== undefined) {
+        currentUVIElement.textContent = `UVI at ${String(localHour).padStart(2, '0')}:00 (Local): ${uviForHour.toFixed(1)}`;
+        currentRecommendationElement.textContent = getRecommendation(uviForHour);
+        
+        // Update status container colors based on UVI level
+        if (statusContainer) {
+            const uviColor = getUviColor(uviForHour);
+            let backgroundColor, borderColor, textColor;
+            
+            switch(uviColor) {
+                case 'red':
+                    backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                    borderColor = 'rgba(255, 0, 0, 0.3)';
+                    textColor = '#8B0000';
+                    break;
+                case 'orange':
+                    backgroundColor = 'rgba(255, 165, 0, 0.1)';
+                    borderColor = 'rgba(255, 165, 0, 0.3)';
+                    textColor = '#CC6600';
+                    break;
+                case 'yellow':
+                    backgroundColor = 'rgba(255, 255, 0, 0.1)';
+                    borderColor = 'rgba(255, 255, 0, 0.4)';
+                    textColor = '#B8860B';
+                    break;
+                case 'green':
+                    backgroundColor = 'rgba(0, 128, 0, 0.1)';
+                    borderColor = 'rgba(0, 128, 0, 0.3)';
+                    textColor = '#006400';
+                    break;
+                default: // Light blue for UVI 0 or no data
+                    backgroundColor = 'rgba(173, 216, 230, 0.1)';
+                    borderColor = 'rgba(173, 216, 230, 0.3)';
+                    textColor = '#4682B4';
+                    break;
+            }
+            
+            statusContainer.style.backgroundColor = backgroundColor;
+            statusContainer.style.borderColor = borderColor;
+            statusContainer.style.color = textColor;
+        }
+        
+        if (bilthovenUviMarker) {
+             bilthovenUviMarker.setIcon(L.divIcon({
+                className: 'bilthoven-uvi-label',
+                html: `UVI: ${uviForHour.toFixed(1)}`,
+                iconSize: [80, 25]
+            }));
+        }
+    } else {
+        // Fallback if no exact hour match
+        currentUVIElement.textContent = "Latest UVI: N/A";
+        currentRecommendationElement.textContent = "Data for the current hour not available.";
+        if (statusContainer) {
+            statusContainer.style.backgroundColor = '#f9f9f9';
+            statusContainer.style.borderColor = '#eee';
+            statusContainer.style.color = 'inherit';
+        }
+         if (bilthovenUviMarker) bilthovenUviMarker.setIcon(L.divIcon({ className: 'bilthoven-uvi-label', html: 'UVI: N/A', iconSize: [80, 25] }));
+        console.warn(`No UVI data found for ${localHour}:00 local in currentHourlyDataForDay`);
+    }
 }
 
 // Initialize the application once the entire page is fully loaded (including scripts)
