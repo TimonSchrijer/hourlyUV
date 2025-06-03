@@ -1,0 +1,126 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    overflow: hidden; /* Prevent scrollbars from body */
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+.ui-overlay-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10; /* Ensure it's above the map */
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    width: 350px; /* Adjust as needed */
+    max-height: calc(100vh - 20px); /* Max height with some padding */
+    overflow-y: auto; /* Allow scrolling within the panel if content overflows */
+}
+
+.ui-overlay-panel h1 {
+    text-align: center;
+    font-size: 1.5em;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.control-group input[type="date"],
+.control-group input[type="range"] {
+    width: 100%;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.time-slider-group span {
+    display: block;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.chart-time-selector-group .chart-container {
+    width: 100%; /* Or a specific pixel value like 350px */
+    max-width: 400px; /* Example max width */
+    height: 200px; /* Example height, or use aspect-ratio */
+    /* aspect-ratio: 16 / 9; /* If you want to maintain an aspect ratio */
+    margin-left: auto; /* Center it if it has a fixed width smaller than container */
+    margin-right: auto; /* Center it */
+}
+
+/* Ensure the canvas fills its container if you size the container */
+.chart-time-selector-group .chart-container canvas#uvChart {
+    display: block;
+    width: 100% !important; /* Override inline styles if any */
+    height: 100% !important; /* Override inline styles if any */
+}
+
+.status-container {
+    padding: 10px;
+    border: 1px solid #eee;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.status-container h2 {
+    font-size: 1.1em;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.status-container p {
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.chart-container {
+    width: 100%;
+    height: 200px; /* Adjust height as needed for the panel */
+    margin-top: 15px;
+}
+
+/* Ensure Leaflet popups are above the overlay panel if they ever overlap, though unlikely with this design */
+.leaflet-popup-pane {
+    z-index: 20 !important; 
+}
+
+/* Styles for the UVI label at Bilthoven's location */
+.bilthoven-uvi-label {
+    font-size: 18px; /* Larger font */
+    font-weight: bold;
+    color: #000000; /* Black text */
+    background-color: rgba(255, 255, 255, 0.75); /* Semi-transparent white background */
+    padding: 5px 8px;
+    border-radius: 4px;
+    text-align: center;
+    white-space: nowrap; /* Prevent text wrapping if it gets long */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    /* iconSize and iconAnchor are set in JS, CSS primarily handles appearance */
+}
+
+/* Optional: ensure it's above the GeoJSON layers if there's any z-index conflict */
+.leaflet-marker-pane .bilthoven-uvi-label {
+    z-index: 650; /* Leaflet default for markers is 600, GeoJSON might be 400 */
+} 

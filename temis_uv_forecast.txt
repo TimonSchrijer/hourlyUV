@@ -1,0 +1,14 @@
+# UV Index Forecast Data from TEMIS (temis.nl)
+# Data processed for De Bilt coordinates
+# Format: YYYYMMDD hhmm  T.dec   UVI InstCode
+# T.dec is a placeholder (0.0), InstCode indicates source.
+YYYYMMDD hhmm  T.dec   UVI InstCode
+20250528 1200  0.0   5.44 TEMIS_FCST
+20250529 1200  0.0   6.22 TEMIS_FCST
+20250530 1200  0.0   6.87 TEMIS_FCST
+20250531 1200  0.0   6.59 TEMIS_FCST
+20250601 1200  0.0   5.98 TEMIS_FCST
+20250602 1200  0.0   5.77 TEMIS_FCST
+20250603 1200  0.0   6.07 TEMIS_FCST
+20250604 1200  0.0   5.22 TEMIS_FCST
+20250605 1200  0.0   5.66 TEMIS_FCST

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netherlands UV Index Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="ui-overlay-panel">
+        <h1>UV Index (Zonkracht) - Netherlands</h1>
+        
+        <div class="control-group">
+            <label for="datePicker">Select Date:</label>
+            <input type="date" id="datePicker">
+        </div>
+        <div class="control-group chart-time-selector-group" style="margin-bottom: 15px;"> 
+            <label style="display: block; margin-bottom: 5px;">Time (Local):</label> 
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span id="selectedTimeLabel" style="font-weight: bold; margin-right: 15px;">12:00 (Local)</span>
+                <p id="sliderHourUVI" style="margin: 0;">UVI: --</p>
+            </div>
+            
+            <div class="chart-container" style="border: 1px solid #ccc; padding: 5px; background-color: #f9f9f9;"> 
+                <canvas id="uvChart"></canvas> 
+            </div>
+        </div>
+
+        <div class="status-container">
+            <h2>Current UV Index - The Netherlands</h2>
+            <p id="currentUVI">Loading...</p>
+            <p id="currentRecommendation">Loading...</p>
+            <p id="dailyPeakUVI">Daily Peak: Loading...</p>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.1.0/chartjs-plugin-annotation.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
