@@ -759,10 +759,14 @@ function updateCurrentStatus(allDailyPeakData, selectedDate) {
     const currentUVIElement = document.getElementById('currentUVI');
     const currentRecommendationElement = document.getElementById('currentRecommendation');
     const statusContainer = document.querySelector('.status-container');
+    const statusHeading = statusContainer ? statusContainer.querySelector('h2') : null;
 
     if (!selectedDate || !currentHourlyDataForDay || currentHourlyDataForDay.length === 0) {
         currentUVIElement.textContent = "Latest UVI: N/A";
         currentRecommendationElement.textContent = "No data available for the selected date.";
+        if (statusHeading) {
+            statusHeading.textContent = "UV Index - The Netherlands";
+        }
         if (statusContainer) {
             statusContainer.style.backgroundColor = '#f9f9f9';
             statusContainer.style.borderColor = '#eee';
@@ -794,6 +798,8 @@ function updateCurrentStatus(allDailyPeakData, selectedDate) {
         relevantHourForUvi = amsterdamNow.getHours();
     }
 
+    // Check if we're showing current time
+    const isCurrentTime = isSelectedDateTodayAmsterdam && relevantHourForUvi === amsterdamNow.getHours();
 
     // Find the UVI data for this relevantHourForUvi in currentHourlyDataForDay
     // currentHourlyDataForDay has dates in UTC.
@@ -823,6 +829,15 @@ function updateCurrentStatus(allDailyPeakData, selectedDate) {
     if (uviForCurrentHour !== null && uviForCurrentHour !== undefined) {
         currentUVIElement.textContent = `UVI at ${String(relevantHourForUvi).padStart(2, '0')}:00 (Local): ${uviForCurrentHour.toFixed(1)}`;
         currentRecommendationElement.textContent = getRecommendation(uviForCurrentHour);
+        
+        // Update heading based on whether it's current time or selected time
+        if (statusHeading) {
+            if (isCurrentTime) {
+                statusHeading.textContent = "Current UV Index - The Netherlands";
+            } else {
+                statusHeading.textContent = `UV Index at ${String(relevantHourForUvi).padStart(2, '0')}:00 - The Netherlands`;
+            }
+        }
         
         // Update status container colors based on UVI level
         if (statusContainer) {
@@ -873,6 +888,9 @@ function updateCurrentStatus(allDailyPeakData, selectedDate) {
         // Fallback if no exact hour match (shouldn't happen if data is generated for all 24h)
         currentUVIElement.textContent = "Latest UVI: N/A";
         currentRecommendationElement.textContent = "Data for the current hour not available.";
+        if (statusHeading) {
+            statusHeading.textContent = "UV Index - The Netherlands";
+        }
          if (bilthovenUviMarker) bilthovenUviMarker.setIcon(L.divIcon({ className: 'bilthoven-uvi-label', html: 'UVI: N/A', iconSize: [80, 25] }));
         console.warn(`No UVI data found for ${relevantHourForUvi}:00 local on ${selectedDate.toDateString()} in currentHourlyDataForDay`);
     }
@@ -1091,10 +1109,14 @@ function updateCurrentStatusForTime(localHour) {
     const currentUVIElement = document.getElementById('currentUVI');
     const currentRecommendationElement = document.getElementById('currentRecommendation');
     const statusContainer = document.querySelector('.status-container');
+    const statusHeading = statusContainer ? statusContainer.querySelector('h2') : null;
 
     if (!currentHourlyDataForDay || currentHourlyDataForDay.length === 0) {
         currentUVIElement.textContent = "Latest UVI: N/A";
         currentRecommendationElement.textContent = "No data available for the selected date.";
+        if (statusHeading) {
+            statusHeading.textContent = "UV Index - The Netherlands";
+        }
         if (statusContainer) {
             statusContainer.style.backgroundColor = '#f9f9f9';
             statusContainer.style.borderColor = '#eee';
@@ -1103,11 +1125,36 @@ function updateCurrentStatusForTime(localHour) {
         return;
     }
 
+    // Check if we're showing current time or a selected time
+    const now = new Date();
+    const currentHour = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' })).getHours();
+    const datePicker = document.getElementById('datePicker');
+    const selectedDateStr = datePicker ? datePicker.value : null;
+    
+    let isCurrentTime = false;
+    if (selectedDateStr) {
+        const selectedParts = selectedDateStr.split('-').map(Number);
+        const today = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' }));
+        const isToday = (selectedParts[0] === today.getFullYear() && 
+                        (selectedParts[1] - 1) === today.getMonth() && 
+                        selectedParts[2] === today.getDate());
+        isCurrentTime = isToday && localHour === currentHour;
+    }
+
     const uviForHour = getUviForHour(localHour);
     
     if (uviForHour !== null && uviForHour !== undefined) {
         currentUVIElement.textContent = `UVI at ${String(localHour).padStart(2, '0')}:00 (Local): ${uviForHour.toFixed(1)}`;
         currentRecommendationElement.textContent = getRecommendation(uviForHour);
+        
+        // Update heading based on whether it's current time or selected time
+        if (statusHeading) {
+            if (isCurrentTime) {
+                statusHeading.textContent = "Current UV Index - The Netherlands";
+            } else {
+                statusHeading.textContent = `UV Index at ${String(localHour).padStart(2, '0')}:00 - The Netherlands`;
+            }
+        }
         
         // Update status container colors based on UVI level
         if (statusContainer) {
@@ -1158,6 +1205,9 @@ function updateCurrentStatusForTime(localHour) {
         // Fallback if no exact hour match
         currentUVIElement.textContent = "Latest UVI: N/A";
         currentRecommendationElement.textContent = "Data for the current hour not available.";
+        if (statusHeading) {
+            statusHeading.textContent = "UV Index - The Netherlands";
+        }
         if (statusContainer) {
             statusContainer.style.backgroundColor = '#f9f9f9';
             statusContainer.style.borderColor = '#eee';
