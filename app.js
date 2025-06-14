@@ -639,16 +639,16 @@ function addManualLineDragListeners(canvas, chartInstance) {
         } else {
             // Not dragging, so check for hover to change cursor (mouse only)
             if (!event.touches) {
-                const rect = canvas.getBoundingClientRect();
+            const rect = canvas.getBoundingClientRect();
                 const inputX = coords.clientX - rect.left;
-                const lineXPos = chartInstance.scales.x.getPixelForValue(manualTimeIndicatorValue);
+            const lineXPos = chartInstance.scales.x.getPixelForValue(manualTimeIndicatorValue);
 
                 if (Math.abs(inputX - lineXPos) <= timeIndicatorHitboxWidth) {
-                    canvas.style.cursor = 'pointer';
-                } else {
-                    canvas.style.cursor = 'default';
-                }
+                canvas.style.cursor = 'pointer';
+            } else {
+                canvas.style.cursor = 'default';
             }
+        }
         }
     }
 
@@ -669,7 +669,7 @@ function addManualLineDragListeners(canvas, chartInstance) {
                 canvas.style.cursor = 'default';
             }
             latestMouseEvent = null;
-            isDragUpdateScheduled = false;
+            isDragUpdateScheduled = false; 
             // console.log('Manual line drag ended. Final Time:', manualTimeIndicatorValue ? manualTimeIndicatorValue.toISOString() : 'N/A'); // Commented out
 
             // ON DRAG END: UPDATE ALL OTHER UI ELEMENTS
