@@ -1,0 +1,103 @@
+name: Update UV data
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 03:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-uv-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run TEMIS/RIVM fetcher
+        run: |
+          python fetch_temis_forecast.py
+
+      - name: Commit and push updated data if changed
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain merged_uv_data.txt)" ]; then
+            git add merged_uv_data.txt
+            git commit -m "chore: update merged_uv_data.txt [skip ci]"
+            git push
+          else
+            echo "No changes in merged_uv_data.txt to commit."
+          fi
+
+      - name: Trigger Vercel deploy (optional)
+        if: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+
+name: Update UV data
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 03:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-uv-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run TEMIS/RIVM fetcher
+        run: |
+          python fetch_temis_forecast.py
+
+      - name: Commit and push updated data if changed
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain merged_uv_data.txt)" ]; then
+            git add merged_uv_data.txt
+            git commit -m "chore: update merged_uv_data.txt [skip ci]"
+            git push
+          else
+            echo "No changes in merged_uv_data.txt to commit."
+          fi
+
+      - name: Trigger Vercel deploy (optional)
+        if: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+
+
